@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  band
+  individual
+}
+
+enum DayType {
+  weekday
+  holiday
+}
+
+enum SchedulePhase {
+  lottery_open
+  lottery_done
+  first_come
+}
+
+enum EntryStatus {
+  pending
+  won
+  lost
+}
+
+enum ReservationStatus {
+  confirmed
+  cancelled
+}
+
+enum BookingType {
+  lottery
+  first_come
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  passwordHash  String
+  userType      UserType
+  createdAt     DateTime       @default(now())
+
+  lotteryEntries LotteryEntry[]
+  reservations   Reservation[]
+}
+
+model TimeSlot {
+  id        String    @id @default(uuid())
+  dayType   DayType
+  startTime String
+  endTime   String
+  slotHours Int
+  label     String
+
+  lotteryEntries LotteryEntry[]
+  reservations   Reservation[]
+}
+
+model WeeklySchedule {
+  id                 String        @id @default(uuid())
+  weekStart          DateTime
+  weekEnd            DateTime
+  phase              SchedulePhase @default(lottery_open)
+  lotteryExecutedAt  DateTime?
+
+  lotteryEntries LotteryEntry[]
+  reservations   Reservation[]
+}
+
+model LotteryEntry {
+  id               String        @id @default(uuid())
+  userId           String
+  timeSlotId       String
+  weeklyScheduleId String
+  targetDate       DateTime
+  status           EntryStatus   @default(pending)
+  createdAt        DateTime      @default(now())
+
+  user           User           @relation(fields: [userId], references: [id])
+  timeSlot       TimeSlot       @relation(fields: [timeSlotId], references: [id])
+  weeklySchedule WeeklySchedule @relation(fields: [weeklyScheduleId], references: [id])
+}
+
+model Reservation {
+  id               String            @id @default(uuid())
+  userId           String
+  timeSlotId       String
+  weeklyScheduleId String
+  reservedDate     DateTime
+  bookingType      BookingType
+  status           ReservationStatus @default(confirmed)
+  createdAt        DateTime          @default(now())
+
+  user           User           @relation(fields: [userId], references: [id])
+  timeSlot       TimeSlot       @relation(fields: [timeSlotId], references: [id])
+  weeklySchedule WeeklySchedule @relation(fields: [weeklyScheduleId], references: [id])
+}
