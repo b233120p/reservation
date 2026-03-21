@@ -10,10 +10,9 @@ const slotsRouter = require("./routes/slots");
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://reservation-nu-two.vercel.app",
-  ]
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json());
 
